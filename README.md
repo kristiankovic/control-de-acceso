@@ -67,6 +67,6 @@ Sigue estos pasos desde cero para preparar tu computadora:
 2. Abre el archivo de código del NodeMCU.
 3. **Configuración Crucial:** Modifica las líneas del Wi-Fi con tus credenciales y edita la variable global `urlHosting` apuntando a tu dominio real de la nube:
    ```cpp
-   const char* ssid = "IngeMelendez";
-   const char* password = "12345678";
+   const char* ssid = "nombre-red";
+   const char* password = "contraseña-red";
    const String urlHosting = "[http://tu-dominio.great-site.net/guardar_registros.php](http://tu-dominio.great-site.net/guardar_registros.php)";
