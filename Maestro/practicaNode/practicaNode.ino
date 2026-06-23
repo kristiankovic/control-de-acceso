@@ -4,14 +4,12 @@
 #include <WiFiClient.h>
 #include <Wire.h> 
 
-//const char* ssid = "CSAT-10602-Ventura";
-//const char* password = "TroGYrAb";
+const char* ssid = "nombre de red";
+const char* password = "contrasenia de red";
 
-const char* ssid = "IPhone";
-const char* password = "aifonaifon";
-
-// URL de servidor en InfinityFree
-const String urlHosting = "http://vv23011.great-site.net/guardar_registros.php";
+// URL del servidor 
+const String urlHosting = "www.dominio.com";
+unsigned long ultimoEnvioNube = 0;
 
 ESP8266WebServer server(80);
 
@@ -81,21 +79,21 @@ void enviarAInternet(float dist, float temp) {
     HTTPClient http;
     
     // Construir la URL con los parámetros dinámicos (?distancia=XX&temperatura=YY)
-    String urlEnvio = urlHosting + "?distancia=" + String(dist) + "&temperatura=" + String(temp);
+    String urlEnvio = urlHosting + "?distancia=" + String(dist) + "&temperatura=" + String(temp) + "&origen=nodemcu=";
     
     http.begin(client, urlEnvio);
     http.setTimeout(5000);
-    http.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-    http.addHeader("Accept", "text/plain, text/html, */*");
-    http.addHeader("Accept-Language", "es-ES,es;q=0.8");
-    http.addHeader("Cache-Control", "no-cache");
-    http.addHeader("Connection", "close");
+    
+    // CABECERAS EXTREMAS ANTI-CACHÉ
+    http.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+    http.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+    http.addHeader("Connection", "keep-alive");
 
     int codigoHTTP = http.GET(); // "Visitar" el enlace
     
     if (codigoHTTP > 0) {
       Serial.print("[NUBE] Datos enviados. Servidor respondio: ");
-      //Serial.println(http.getString());
+      Serial.println(http.getString());
     } else {
       Serial.println("[NUBE] Error en el envío (Posible entorno local sin WAN)");
     }
@@ -181,7 +179,11 @@ void loop() {
       Serial.println("[I2C MASTER] Datos sincronizados de forma exitosa.");
       
       // 2. EJECUTAR ENVÍO REMOTO: Manda los datos capturados a la nube
-      enviarAInternet(distanciaActual, temperaturaActual);
+
+      if (tiempoActual - ultimoEnvioNube >= 15000) { // Enviar cada 15 segundos (Reduces el consumo un 750%)
+        ultimoEnvioNube = tiempoActual;
+        enviarAInternet(distanciaActual, temperaturaActual);
+      }
     }
   }
 }
